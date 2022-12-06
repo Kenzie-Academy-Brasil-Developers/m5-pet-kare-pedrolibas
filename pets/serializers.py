@@ -33,20 +33,19 @@ class PetSerializer(serializers.Serializer):
 
 
     def update(self, instance, validated_data: dict):
-        group_dict = validated_data.pop("group")
-        traits = validated_data.pop("traits")
+        if validated_data.get("group"):
+            instance.group = Group.objects.get_or_create(scientific_name=validated_data["group"]["scientific_name"])[0]
+            validated_data.pop("group")
+
+
+        if validated_data.get("traits"):
+            instance.traits.set([Trait.objects.get_or_create(name=trait["name"])[0] for trait in validated_data["traits"]])
+            validated_data.pop("traits")
+
 
         for key, value in validated_data.items():
             setattr(instance, key, value)
 
-        # instance.name = validated_data.get("name", instance.name)
-        # instance.age = validated_data.get("age", instance.age)
-        # instance.weight = validated_data.get("weight", instance.weight)
-        # instance.sex = validated_data.get("sex", instance.sex)
-        # instance.group = Group.objects.get_or_create(scientific_name=validated_data["group"]["scientific_name"])[0]
-        # instance.traits.set = [Trait.objects.get_or_create(name=trait["name"])[0] for trait in validated_data["traits"]]
-
-        print("teste serializer")
 
         instance.save()
 
