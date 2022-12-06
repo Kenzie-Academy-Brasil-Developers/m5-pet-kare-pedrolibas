@@ -12,9 +12,12 @@ class PetSerializer(serializers.Serializer):
     age = serializers.IntegerField()
     weight = serializers.FloatField()
     sex = serializers.ChoiceField(choices=SexPet.choices, default=SexPet.NOT_INFORMED)
+    traits_count = serializers.SerializerMethodField(read_only=True)
     group = GroupSerializer()
     traits = TraitSerializer(many=True)
 
+    def get_traits_count(self, obj):
+        return len(Pet.objects.get(id=obj.id).traits.all())
 
     def create(self, validated_data: dict):
         group_dict = validated_data.pop("group")
@@ -37,15 +40,12 @@ class PetSerializer(serializers.Serializer):
             instance.group = Group.objects.get_or_create(scientific_name=validated_data["group"]["scientific_name"])[0]
             validated_data.pop("group")
 
-
         if validated_data.get("traits"):
             instance.traits.set([Trait.objects.get_or_create(name=trait["name"])[0] for trait in validated_data["traits"]])
             validated_data.pop("traits")
 
-
         for key, value in validated_data.items():
             setattr(instance, key, value)
-
 
         instance.save()
 
